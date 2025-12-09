@@ -1,0 +1,100 @@
+// Grafana Alloy configuration for collecting authentication logs
+// and sending them to ZTAC IP Reputation Engine via OTLP
+
+// Discover Kubernetes pods with the auth-log-generator label
+discovery.kubernetes "auth_services" {
+  role = "pod"
+
+  namespaces {
+    names = ["default"]
+  }
+
+  selectors {
+    role = "pod"
+    label = "app=auth-log-generator"
+  }
+}
+
+// Scrape logs from the auth-log-generator pods
+loki.source.kubernetes "auth_logs" {
+  targets    = discovery.kubernetes.auth_services.targets
+  forward_to = [loki.process.parse_auth_logs.receiver]
+}
+
+// Parse JSON authentication logs - just pass through to OTLP
+loki.process "parse_auth_logs" {
+  forward_to = [otelcol.receiver.loki.auth_logs.receiver]
+}
+
+// Receive logs from Loki pipeline
+otelcol.receiver.loki "auth_logs" {
+  output {
+    logs = [otelcol.processor.transform.extract_auth_fields.input]
+  }
+}
+
+// Transform log body to ZTAC-expected JSON format
+otelcol.processor.transform "extract_auth_fields" {
+  error_mode = "ignore"
+
+  log_statements {
+    context = "log"
+
+    // Transform body to ZTAC format: {"UserName":"...","Status":"SUCCESS/FAILURE","SourceIP":"..."}
+    // Only process if body contains "event_type": "authentication"
+    statements = [
+      // For successful authentication (success == true)
+      `set(body, Concat(["{\"UserName\":\"", ParseJSON(body)["auth"]["username"], "\",\"Status\":\"SUCCESS\",\"SourceIP\":\"", ParseJSON(body)["auth"]["ip_address"], "\"}"], "")) where IsMatch(body, "authentication") and ParseJSON(body)["auth"]["success"] == true`,
+      // For failed authentication (success == false)
+      `set(body, Concat(["{\"UserName\":\"", ParseJSON(body)["auth"]["username"], "\",\"Status\":\"FAILURE\",\"SourceIP\":\"", ParseJSON(body)["auth"]["ip_address"], "\"}"], "")) where IsMatch(body, "authentication") and ParseJSON(body)["auth"]["success"] == false`,
+    ]
+  }
+
+  // Add resource attributes for agent registration
+  log_statements {
+    context = "resource"
+
+    statements = [
+      `set(attributes["service.name"], "alloy-auth-collector")`,
+      `set(attributes["service.namespace"], "default")`,
+    ]
+  }
+
+  output {
+    logs = [otelcol.exporter.otlp.ztac.input]
+  }
+}
+
+// Export logs to ZTAC via OTLP gRPC
+otelcol.exporter.otlp "ztac" {
+  client {
+    endpoint = "ztac-ip-reputation-engine-service:4317"
+
+    // REQUIRED headers for ZTAC
+    headers = {
+      "X-Scope-OrgId"    = env("PRIMARY_TENANT"),  // Tenant identifier from env
+      "X-Real-IP"        = "10.1.0.100",           // Alloy agent IP (for tracking)
+    }
+
+    // Use insecure connection for local dev
+    tls {
+      insecure = true
+    }
+  }
+}
+
+// Expose metrics about log processing
+prometheus.exporter.self "alloy_metrics" {}
+
+// Scrape own metrics
+prometheus.scrape "self" {
+  targets    = prometheus.exporter.self.alloy_metrics.targets
+  forward_to = [prometheus.remote_write.local.receiver]
+}
+
+// Send metrics to local Prometheus
+prometheus.remote_write "local" {
+  endpoint {
+    url = "http://prometheus:19090/api/v1/write"
+  }
+}

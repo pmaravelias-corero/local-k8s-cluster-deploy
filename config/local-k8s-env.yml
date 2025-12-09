@@ -1,0 +1,112 @@
+# Environment variables for each service/API
+# Each service defines ALL its own variables
+
+# This is committed to Git because it doesn't contain any sensitive data and is used to create
+# local clusters for development purposes only.
+
+# Global/shared configuration across all services
+global:
+  # Comma-separated list of tenant slugs for multi-tenant services
+  # Used by: auth-log-generator, prometheus-data-generator
+  TENANTS: patmon,perimara,demo-tenant
+
+  # Primary tenant for single-tenant operations (e.g., Alloy OTLP export)
+  # Used by: Alloy agent (X-Scope-OrgId header)
+  PRIMARY_TENANT: patmon
+
+etcd:
+  ETCD_NAME: etcd-server
+  ETCD_DATA_DIR: /etcd-data
+  ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+  ETCD_ADVERTISE_CLIENT_URLS: http://0.0.0.0:2379
+  ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+  ETCD_INITIAL_ADVERTISE_PEER_URLS: http://0.0.0.0:2380
+  ETCD_INITIAL_CLUSTER: etcd-server=http://0.0.0.0:2380
+  ETCD_INITIAL_CLUSTER_TOKEN: etcd-cluster-1
+  ETCD_INITIAL_CLUSTER_STATE: new
+  ETCD_AUTO_COMPACTION_RETENTION: "1"
+  ETCD_ROOT_PASSWORD: defaultpassword
+
+management-plane-api:
+  ETCD_HOST: etcd
+  ETCD_PORT: "2379"
+  ETCD_USERNAME: root
+  ETCD_PASSWORD: defaultpassword
+  APP_NAME: management-plane-api
+  APP_VERSION: 1.0.0
+  LOG_LEVEL: INFO
+  OPERATIONAL_API_URL: http://operational-api:8080
+  IP_REPUTATION_ENGINE_HOST: localhost
+  IP_REPUTATION_ENGINE_PORT: "50051"
+  IP_REPUTATION_ENGINE_TIMEOUT: "5.0"
+  AUTHENTIK_URL: https://login.pm-dev.core.corero.io
+  JWT_ISSUER: https://login.pm-dev.core.corero.io/application/o/tenant-config/
+  JWT_AUDIENCE: tenant-config
+  JWKS_URL: https://login.pm-dev.core.corero.io/application/o/tenant-config/jwks/
+
+operational-api:
+  PORT: "8080"
+  PROMETHEUS_URL: http://prometheus:19090
+  VALKEY_HOST: valkey
+  VALKEY_PORT: "6379"
+  VALKEY_PASSWORD: ""
+  VALKEY_DB: "0"
+  OPENEXCHANGERATES_CREDENTIALS_FILE: /secrets/openexchangerates/credentials.json
+  OPENEXCHANGERATES_API_URL: http://openexchangerates-mock:8080/api/latest.json
+  ZTAC_GRPC_URL: ztac-ip-reputation-engine-service:9090
+  AUTHENTIK_URL: https://login.pm-dev.core.corero.io
+  JWT_ISSUER: https://login.pm-dev.core.corero.io/application/o/tenant-config/
+  JWT_AUDIENCE: tenant-config
+  JWKS_URL: https://login.pm-dev.core.corero.io/application/o/tenant-config/jwks/
+  ALL_TENANT_ADMIN_GROUP: all-tenant-config-admins
+
+openexchangerates-mock: {}
+
+tenant-auth-management-api:
+  PORT: "8082"
+  LOG_LEVEL: info
+  GIN_MODE: release
+  AUTHENTIK_URL: https://login.pm-dev.core.corero.io
+  AUTHENTIK_TIMEOUT: 10s
+  AUTHENTIK_INVITATION_STAGE: core-user-invitation-email
+  AUTHENTIK_INVITATION_VALIDITY_HOURS: "72"
+  AUTHENTIK_GROUPS_FILE: /app/example-authentik-groups-file.yml
+  JWT_ISSUER: https://login.pm-dev.core.corero.io/application/o/tenant-config/
+  JWT_AUDIENCE: tenant-config
+  JWKS_URL: https://login.pm-dev.core.corero.io/application/o/tenant-config/jwks/
+  ALL_TENANT_ADMIN_GROUP: all-tenant-config-admins
+
+ztac-ip-reputation-engine-service:
+  SERVER_HOST: "0.0.0.0"
+  SERVER_PORT: "4317"
+  API_SERVER_HOST: "0.0.0.0"
+  API_SERVER_PORT: "9090"
+  METRICS_SERVER_HOST: "0.0.0.0"
+  METRICS_SERVER_PORT: "8080"
+  VALKEY_HOST: valkey
+  VALKEY_PORT: "6379"
+  VALKEY_PASSWORD: ""
+  VALKEY_DB: "0"
+  VALKEY_POOL_SIZE: 10
+  MGMT_API_BASE_URL: http://management-plane-api:8000
+  MGMT_API_TIMEOUT_SECONDS: 30
+  MGMT_API_MAX_RETRIES: 3
+  LOG_LEVEL: info
+
+core-ui:
+  UI_APP_URL: http://dev.core-ui.local:3000
+  AUTHENTIK_BASE_URL: https://login.pm-dev.core.corero.io
+  AUTHENTIK_ISSUER: https://login.pm-dev.core.corero.io/application/o/tenant-config/
+  AUTHENTIK_REDIRECT_URI: http://dev.core-ui.local:3000/api/auth/callback
+  AUTHENTIK_CLIENT_ID: tenant-config
+  AUTHENTIK_CLIENT_SECRET: oHJI7wemMPaxLh5kuBz65NV2TLeBaxxKmLq342oKCjVBq6ReDTgfinazqOPUEK1hSOHYXEWT5LBdJDXAeKdHK2XFRy0gy6ffW7X27ermBFrV0TQOOwOk8KdXxlOhP0GW
+  SESSION_SECRET: test-secret-at-least-32-characters-long-for-development
+  SESSION_COOKIE_MAX_AGE_SECONDS: "604800"
+  TOKEN_COOKIE_MAX_AGE_SECONDS: "604800"
+  TOKEN_EXPIRATION_BUFFER_SECONDS: "60"
+  MANAGEMENT_PLANE_API_URL: http://management-plane-api:8000
+  OPERATIONAL_API_URL: http://operational-api:8080
+  TENANT_AUTH_MANAGEMENT_API_URL: http://tenant-auth-management-api:8082
+  PROXY_FETCH_LOG_LEVEL: debug
+  SHOW_EXPERIMENTAL: true
+  ALL_TENANT_ADMIN_GROUP: all-tenant-config-admins
