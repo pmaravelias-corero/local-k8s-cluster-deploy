@@ -92,6 +92,11 @@ ztac-ip-reputation-engine-service:
   MGMT_API_TIMEOUT_SECONDS: 30
   MGMT_API_MAX_RETRIES: 3
   LOG_LEVEL: info
+  LOKI_ENABLED: "true"
+  LOKI_URL: "http://loki:3100/loki/api/v1/push"
+  LOKI_BATCH_SIZE: "100"
+  LOKI_BATCH_WAIT_MS: "1000"
+  LOKI_TIMEOUT_SECONDS: "10"
 
 core-ui:
   UI_APP_URL: http://dev.core-ui.local:3000

@@ -53,6 +53,7 @@ declare -A DEPENDENCIES=(
     ["prometheus"]="prom/prometheus:latest:9090:19090:default"
     ["pushgateway"]="prom/pushgateway:latest:9091:19091:default"
     ["alloy"]="grafana/alloy:latest:12345:12345:default"
+    ["loki"]="grafana/loki:latest:3100:3100:default"
 )
 
 declare -A CONFIGMAPS=(
