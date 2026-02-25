@@ -61,6 +61,7 @@ declare -A CONFIGMAPS=(
 		["prometheus-config"]="default:config/prometheus-config.yml:/etc/prometheus/prometheus.yml:prometheus"
 		["openexchangerates-credentials"]="default:mocks/openexchangerates-mock/secrets/credentials.json:/secrets/openexchangerates/credentials.json:operational-api"
 		["alloy-config"]="default:config/alloy/config.alloy:/etc/alloy/config.alloy:alloy"
+		["authentik-token"]="default:secrets/authentik/token:/secrets/authentik/token:management-plane-api"
 )
 
 

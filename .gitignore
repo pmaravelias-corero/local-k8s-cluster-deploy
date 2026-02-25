@@ -1,6 +1,9 @@
 # Generated Kubernetes manifests
 manifests/*.yaml
 
+# Authentik API token (copy from token.example and fill in locally)
+secrets/authentik/token
+
 # Python
 __pycache__/
 *.py[cod]
