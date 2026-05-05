@@ -1,3 +1,8 @@
+# DEPRECATED
+
+We no longer use the components that this project sets up and deploys.
+The new way to deploy CORElets locally is by using their own `docker-compose.corelets.yml`
+
 # Local Kubernetes Cluster Deployment
 
 Tooling for deploying all APIs and dependencies to a local Kubernetes cluster (Docker Desktop) for development and testing.
